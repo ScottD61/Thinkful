@@ -22,3 +22,7 @@ plt.bar(freq.keys(), freq.values(), width=1)
 plt.show()
 #Perform chi-squared test
 chi, p = stats.chisquare(freq.values())
+# chi
+# > 2408.433146517214
+# p
+# > 0.0

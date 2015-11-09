@@ -36,7 +36,7 @@ loansData['FICO.Range'] = loansData['FICO.Range'].map(lambda x: x.split('-'))
 #Create variable FICO.Score as first item in list to integer
 loansData['FICO.Score'] = loansData['FICO.Range'].map(lambda x: int(x[0]))
 
-#Conversion did not work
+#Conversion did work
 print(loansData['FICO.Score'][0:5])
 
 #81174    735-739
@@ -45,6 +45,9 @@ print(loansData['FICO.Score'][0:5])
 #15825    695-699
 #33182    695-699
 #Name: FICO.Range, dtype: object
+
+#Export cleaned dataset as .csv file
+loansData.to_csv('loansData_clean.csv', header = True, index = False)
 
 #Subset interest rate, amount requested, and FICO score columns
 intrate = loansData['Interest.Rate']

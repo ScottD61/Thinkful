@@ -7,46 +7,57 @@ Created on Mon Nov 30 17:37:59 2015
 #Import modules
 import numpy as np
 import pandas as pd 
-import statsmodels.formula.api as smf
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import PolynomialFeatures
+import sklearn.linear_model as ln
 
-#Generate dataset
+#Gen toy data
 #Set seed
 np.random.seed(414)
 
-#Gen toy data
 X = np.linspace(0, 15, 1000)
 y = 3 * np.sin(X) + np.random.normal(1 + X, .2, 1000)
 
 train_X, train_y = X[:700], y[:700]
 test_X, test_y = X[700:], y[700:]
 
-train_df = pd.DataFrame({'X': train_X, 'y': train_y})
-test_df = pd.DataFrame({'X': test_X, 'y': test_y})
+#Convert numpy array as dataframe
+train_X = pd.DataFrame(train_X)
+train_y = pd.DataFrame(train_y)
 
-#Model Building
-#Linear regression
-poly_1 = smf.ols(formula = 'y ~ 1 + X', data = train_df).fit()
-#Quadratic 
-poly_2 = smf.ols(formula = 'y ~ 1 + X + I(X**2)', data = train_df).fit()
+#Inspect data
+train_X.head()
+train_y.head()
 
+#Scikit learn
+#Linear model 
+#Create linear regression object
+regr = ln.LinearRegression()
+#Train model with training sets
+regr.fit(train_X, train_y)
 
-#Test
-#Numpy objects
-#Linear model - getting 1k results for some reason 
-ols_predict = poly_1.predict(train_df['X'])
 #Quadratic model
-quad_predict = poly_2.predict(train_df['X'])
+#Add polynomial features to train_X
+poly = PolynomialFeatures(degree = 2)
+X_ = poly.fit_transform(train_X)
+#Regression object
+polyregr = ln.LinearRegression()
+#Train model with polynomial transformed training set
+polyregr.fit(X_, train_y)
+
+#Predict
+#Linear model
+ols_predict = regr.predict(train_X)
+#Polynomial model
+poly_predict = polyregr.predict(X_)
 
 #Evaluation with training mean-square error (MSE)
 #Linear model
-mean_squared_error(train_df['y'], ols_predict)
-#Quadratic model
-mean_squared_error(train_df['y'], quad_predict)
+mean_squared_error(train_y, ols_predict)
+# 4.0349438280411309
 
+#Polynomial model
+mean_squared_error(train_y, poly_predict)
+# 3.7754092151262766
 
-ols_predict.shape
-#(1000,)
-
-
-print(ols_predict)
+#Better model - polynomial regression because of smaller MSE

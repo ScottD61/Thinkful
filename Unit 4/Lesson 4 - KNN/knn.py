@@ -36,7 +36,7 @@ neigh = KNeighborsClassifier()
 clf = grid_search.GridSearchCV(neigh, parameters)
 clf.fit(X_train, y_train)
 
-#Get optimal number of neighbors!!??
+#Get optimal number of neighbors
 clf.best_params_
 #{'n_neighbors': 5, 'weights': 'uniform'}
 #Use five neighbors

@@ -12,6 +12,10 @@ from pandas.tools.plotting import scatter_matrix
 from sklearn.cross_validation import cross_val_score
 from sklearn.preprocessing import StandardScaler
 import sklearn.linear_model as ln
+from sklearn.metrics import roc_auc_score
+from unbalanced_dataset import UnderSampler, NearMiss, CondensedNearestNeighbour, OneSidedSelection,\
+NeighbourhoodCleaningRule, TomekLinks, ClusterCentroids, OverSampler, SMOTE,\
+SMOTETomek, SMOTEENN, EasyEnsemble, BalanceCascade
 
 #Import data
 german_credit = pd.read_csv('German.csv')
@@ -87,9 +91,17 @@ plt.show()
 #Counting factors in categorical variables 
 german_credit['Status checking'].value_counts()
 
+#Checking balance of dependent variable
+german_credit['Classification'].value_counts()
+#1    700
+#2    300
+
 #Outlier detection - do boxplots
 #Boxplots
 plt.boxplot(german_credit['Credit amount']) 
+
+#Check logistic regression ???
+plt.scatter(german_credit['Credit amount'], german_credit['Classification'])
 
 #Correlation between numeric
 #Anova between categorical and numeric?
@@ -98,6 +110,13 @@ plt.boxplot(german_credit['Credit amount'])
 #Data cleaning
 #Change data type of classification
 german_credit['Classification'] = german_credit['Classification'].astype('category')
+
+#Change classification label - HELP!!!!
+german_credit['Classification'] = german_credit['Classification'].str.replace('1', '0')
+#ERROR: AttributeError: Can only use .str accessor with string values, which use np.object_ dtype in pandas
+
+
+
 #Change categorical variables to dummy
 dummy_var = pd.get_dummies(german_credit[['Status checking', 'Credit history', 'Purpose', 
                               'Savings account/bonds', 'Present employment', 
@@ -151,12 +170,16 @@ precision_score = cross_val_score(logreg, X, Y, scoring = 'precision', cv = 10)
 np.mean(precision_score)
 #0.791
 
+#Test for AUC
+auc_score = cross_val_score(logreg, X, Y, scoring = 'roc_auc', cv = 10)
+np.mean(auc_score)
+
+
 #Model building pt. 2
 #Standardize numeric variables
 #Re-import data and subset numeric variables to standardize in matrix
 #Import data
 german_credit = pd.read_csv('German.csv')
-
 #Data type changes
 #Change data type of classification
 german_credit['Classification'] = german_credit['Classification'].astype('category')
@@ -171,7 +194,6 @@ num_credit_st = num_credit.astype('float')
 stan = StandardScaler().fit(num_credit_st)
 #Transform dataset
 stan_data = stan.transform(num_credit_st)
-
 #Subset categorical data
 cat_credit = german_credit[['Status checking', 'Credit history', 'Purpose', 
                               'Savings account/bonds', 'Present employment', 
@@ -179,34 +201,63 @@ cat_credit = german_credit[['Status checking', 'Credit history', 'Purpose',
                               'Property', 'Other installment plans', 'Housing', 
                               'Job', 'Telephone', 'Foreign worker']]
 #Change categorical variables to dummy
-dummy_var = pd.get_dummies(cat_credit)   
-       
+dummy_var = pd.get_dummies(cat_credit)  
 #Join dataframes together 
 german_new_credit = dummy_var.join(num_credit) 
-                            
 
+#Correlation matrix of standardized numeric variables
+#Subset data
+num_st = german_new_credit[['Duration', 'Credit amount', 
+                            'Installment rate', 'Present resident since',
+                            'Age', 'Number existing credits', 'Number of people liable']]
+num_st.corr()
+
+                            
 #Subset dataframe into indepedent and dependent variables
 X_st = german_new_credit
 Y_st = german_credit['Classification'] 
 
 #Logistic regression 
 #Get c parameter for regularization 
+#parameters = {'C': [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 1]}
+
 #Create logistic regression object
 logreg_st = ln.LogisticRegression()
 #Convert dataframe to matrix 
-X = X.as_matrix()
-Y = Y.as_matrix()
+X_stm = X_st.as_matrix()
+Y_stm = Y_st.as_matrix()
 
 #Fit the logistic regression 
-logreg.fit(X, Y)
+logreg_st.fit(X_stm, Y_stm)
+
+#Model testing pt. 2 - no changes b/c need a different value for regularization!!!!!!!!!
+#Test for accuracy of test set
+score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'accuracy', cv = 10)
+np.mean(score_st)
+#0.748
+#Test for recall of test set
+recall_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'recall', cv = 10)
+np.mean(recall_score_st)
+#0.869
+#Test for precision of test set
+precision_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'precision', cv = 10)
+np.mean(precision_score_st)
+#0.791
+
+
+#Model building pt.3 
+#Remove outliers by variable transformation or deleting observations
+    #Do scatterplots and boxplots
+    #See if standardizing did anything - only report the ones that made a difference
+#Feature engineering
+    #Remove skewness of variables
+    #Create new features
+
+#Scatterplots
 
 
 
-
-
-#TO DO: COME UP WITH MORE METRICS THEN PREDICT 
-
-
+#To do later
 #More complex models 
 #Things to vary:
     #Training set size

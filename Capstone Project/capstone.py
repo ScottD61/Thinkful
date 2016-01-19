@@ -231,6 +231,8 @@ Y_stm = Y_st.as_matrix()
 logreg_st.fit(X_stm, Y_stm)
 
 #Model testing pt. 2 - no changes b/c need a different value for regularization!!!!!!!!!
+#Get AUC score
+
 #Test for accuracy of test set
 score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'accuracy', cv = 10)
 np.mean(score_st)
@@ -246,6 +248,52 @@ np.mean(precision_score_st)
 
 
 #Model building pt.3 
+#Fixed unbalanced dataset
+#Import data
+german_credit = pd.read_csv('German.csv')
+#Data type changes
+#Change data type of classification
+german_credit['Classification'] = german_credit['Classification'].astype('category')
+#Convert integer to float
+#Subset numeric data
+num_credit = german_credit[['Duration', 'Credit amount', 
+                            'Installment rate', 'Present resident since',
+                            'Age', 'Number existing credits', 'Number of people liable']]
+#Apply function to change datatype
+num_credit_st = num_credit.astype('float')                            
+#Standardization object and fit to data
+stan = StandardScaler().fit(num_credit_st)
+#Transform dataset
+stan_data = stan.transform(num_credit_st)
+#Subset categorical data
+cat_credit = german_credit[['Status checking', 'Credit history', 'Purpose', 
+                              'Savings account/bonds', 'Present employment', 
+                              'Personal status/sex', 'Debtors/guarantors', 
+                              'Property', 'Other installment plans', 'Housing', 
+                              'Job', 'Telephone', 'Foreign worker']]
+#Change categorical variables to dummy
+dummy_var = pd.get_dummies(cat_credit)  
+#Join dataframes together 
+german_new_credit = dummy_var.join(num_credit)
+#Subset dataframe into indepedent and dependent variables
+X = german_new_credit.drop('Classification', axis = 1)
+Y = german_new_credit['Classification']
+
+#Apply SMOTE
+#Create SMOTE object
+smote = SMOTE(ratio = 'ratio', verbose = 'verbose', kind = 'regular')
+#Fit data and transform
+smox, smoy = smote.fit_transform(X, Y) ###Error!!!!
+
+
+
+
+
+
+
+
+
+
 #Remove outliers by variable transformation or deleting observations
     #Do scatterplots and boxplots
     #See if standardizing did anything - only report the ones that made a difference

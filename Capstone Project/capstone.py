@@ -109,11 +109,13 @@ plt.scatter(german_credit['Credit amount'], german_credit['Classification'])
 
 #Data cleaning
 #Change data type of classification
-german_credit['Classification'] = german_credit['Classification'].astype('category')
+#german_credit['Classification'] = german_credit['Classification'].astype('category')
 
 #Change classification label - HELP!!!!
 german_credit['Classification'] = german_credit['Classification'].str.replace('1', '0')
 #ERROR: AttributeError: Can only use .str accessor with string values, which use np.object_ dtype in pandas
+
+german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) #ONE WAY
 
 
 
@@ -248,38 +250,47 @@ np.mean(precision_score_st)
 
 
 #Model building pt.3 
-#Fixed unbalanced dataset
+#Fixed unbalanced dataset w/o standardization
 #Import data
 german_credit = pd.read_csv('German.csv')
 #Data type changes
-#Change data type of classification
-german_credit['Classification'] = german_credit['Classification'].astype('category')
-#Convert integer to float
-#Subset numeric data
-num_credit = german_credit[['Duration', 'Credit amount', 
-                            'Installment rate', 'Present resident since',
-                            'Age', 'Number existing credits', 'Number of people liable']]
-#Apply function to change datatype
-num_credit_st = num_credit.astype('float')                            
-#Standardization object and fit to data
-stan = StandardScaler().fit(num_credit_st)
-#Transform dataset
-stan_data = stan.transform(num_credit_st)
-#Subset categorical data
-cat_credit = german_credit[['Status checking', 'Credit history', 'Purpose', 
+german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) 
+#Change categorical variables to dummy
+dummy_var = pd.get_dummies(german_credit[['Status checking', 'Credit history', 'Purpose', 
                               'Savings account/bonds', 'Present employment', 
                               'Personal status/sex', 'Debtors/guarantors', 
                               'Property', 'Other installment plans', 'Housing', 
-                              'Job', 'Telephone', 'Foreign worker']]
-#Change categorical variables to dummy
-dummy_var = pd.get_dummies(cat_credit)  
-#Join dataframes together 
-german_new_credit = dummy_var.join(num_credit)
+                              'Job', 'Telephone', 'Foreign worker']])
+#Get dimensions of new dataframe                              
+dummy_var.shape   
+#(1000, 54)   
+#Drop old categorical variables from german credit dataframe
+credit_new = german_credit.drop(['Status checking', 'Credit history', 'Purpose', 
+                              'Savings account/bonds', 'Present employment', 
+                              'Personal status/sex', 'Debtors/guarantors', 
+                              'Property', 'Other installment plans', 'Housing', 
+                              'Job', 'Telephone', 'Foreign worker'], axis = 1)
+credit_new.shape                              
+#(1000, 8)                              
+#Join dataframes together
+german_new_credit = dummy_var.join(credit_new)  
+german_new_credit.shape        
+#(1000, 62)
+                       
+#Model building
 #Subset dataframe into indepedent and dependent variables
 X = german_new_credit.drop('Classification', axis = 1)
-Y = german_new_credit['Classification']
+Y = german_credit['Classification']
+
 
 #Apply SMOTE
+#Get ratio
+ratio = float(np.count_nonzero(Y == 1)) / float(np.count_nonzero(Y == 0))
+#Ratio output
+print(ratio)
+#0.43
+#Set verbose as false to show less information
+verbose = False
 #Create SMOTE object
 smote = SMOTE(ratio = 'ratio', verbose = 'verbose', kind = 'regular')
 #Fit data and transform

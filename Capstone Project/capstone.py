@@ -17,6 +17,9 @@ from unbalanced_dataset import UnderSampler, NearMiss, CondensedNearestNeighbour
 NeighbourhoodCleaningRule, TomekLinks, ClusterCentroids, OverSampler, SMOTE,\
 SMOTETomek, SMOTEENN, EasyEnsemble, BalanceCascade
 
+from sklearn.learning_curve import learning_curve
+
+
 #Import data
 german_credit = pd.read_csv('German.csv')
 
@@ -156,7 +159,54 @@ X = X.as_matrix()
 Y = Y.as_matrix()
 
 #Fit the logistic regression 
-logreg.fit(X, Y)
+lo = logreg.fit(X, Y)
+
+#Identify size of training data with learning curves - USE POST FROM ULTRAVIOLET ANALYTICS
+#Cross validation is 3 folds
+
+#Trouble plotting learning curves
+train_sizes, train_scores, valid_scores = learning_curve(
+     lo, X, Y)
+
+def plot_learning_curve(lo, Logit, X, Y, ylim = None, cv = None):
+    plt.figure()
+    plt.title(title)
+    if ylim is not None:
+        plt.ylim(*ylim)
+    plt.xlabel("Training examples")
+    plt.ylabel("Score")
+    train_sizes, train_scores, test_scores = learning_curve(
+        estimator, X, y, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes)
+    train_scores_mean = np.mean(train_scores, axis=1)
+    train_scores_std = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    test_scores_std = np.std(test_scores, axis=1)
+    plt.grid()
+
+    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
+                     train_scores_mean + train_scores_std, alpha=0.1,
+                     color="r")
+    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
+                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
+    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
+             label="Training score")
+    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
+             label="Cross-validation score")
+
+    plt.legend(loc="best")
+    return plt
+      
+plt.show()    
+
+
+
+
+
+
+
+
+
+
 
 #Model testing
 #Test for accuracy of test set
@@ -171,7 +221,6 @@ np.mean(recall_score)
 precision_score = cross_val_score(logreg, X, Y, scoring = 'precision', cv = 10)
 np.mean(precision_score)
 #0.791
-
 #Test for AUC
 auc_score = cross_val_score(logreg, X, Y, scoring = 'roc_auc', cv = 10)
 np.mean(auc_score)
@@ -282,22 +331,185 @@ german_new_credit.shape
 X = german_new_credit.drop('Classification', axis = 1)
 Y = german_credit['Classification']
 
-
 #Apply SMOTE
 #Get ratio
-ratio = float(np.count_nonzero(Y == 1)) / float(np.count_nonzero(Y == 0))
+#ratio = float(np.count_nonzero(Y == 0)) / float(np.count_nonzero(Y == 1))
+#Set ratio manually b/c it did not work 
 #Ratio output
-print(ratio)
-#0.43
+#print(ratio)
+#2.33
 #Set verbose as false to show less information
 verbose = False
 #Create SMOTE object
-smote = SMOTE(ratio = 'ratio', verbose = 'verbose', kind = 'regular')
+#smote = SMOTE(ratio = ratio, verbose = False, kind = 'regular') #Don't use
+
+#Another way - leave this way
+smote = SMOTE(ratio = 1.335, verbose = False, kind = 'regular')
+
 #Fit data and transform
-smox, smoy = smote.fit_transform(X, Y) ###Error!!!!
+X_mod = X.as_matrix()
+Y_mod = np.array(Y)
+#Create new dataset
+smox, smoy = smote.fit_transform(X_mod, Y_mod) 
+
+#Check ratio of good and bad creditors
+#Convert matrix to dataframe
+y_data = pd.DataFrame(smoy, columns = ['classification'])
+#check work
+y_data['classification'].value_counts()
+
+
+#New visualizations
+#Convert matrix to dataframe to plot numeric columns
+#Create list of column names
+col_names = ['Status checking_A11', 'Status checking_A12', 'Status checking_A13',
+       'Status checking_A14', 'Credit history_A30', 'Credit history_A31',
+       'Credit history_A32', 'Credit history_A33', 'Credit history_A34',
+       'Purpose_A40', 'Purpose_A41', 'Purpose_A410', 'Purpose_A42',
+       'Purpose_A43', 'Purpose_A44', 'Purpose_A45', 'Purpose_A46',
+       'Purpose_A48', 'Purpose_A49', 'Savings account/bonds_A61',
+       'Savings account/bonds_A62', 'Savings account/bonds_A63',
+       'Savings account/bonds_A64', 'Savings account/bonds_A65',
+       'Present employment_A71', 'Present employment_A72',
+       'Present employment_A73', 'Present employment_A74',
+       'Present employment_A75', 'Personal status/sex_A91',
+       'Personal status/sex_A92', 'Personal status/sex_A93',
+       'Personal status/sex_A94', 'Debtors/guarantors_A101',
+       'Debtors/guarantors_A102', 'Debtors/guarantors_A103', 'Property_A121',
+       'Property_A122', 'Property_A123', 'Property_A124',
+       'Other installment plans_A141', 'Other installment plans_A142',
+       'Other installment plans_A143', 'Housing_A151', 'Housing_A152',
+       'Housing_A153', 'Job_A171', 'Job_A172', 'Job_A173', 'Job_A174',
+       'Telephone_A191', 'Telephone_A192', 'Foreign worker_A201',
+       'Foreign worker_A202', 'Duration', 'Credit amount', 'Installment rate',
+       'Present resident since', 'Age', 'Number existing credits',
+       'Number of people liable']
+#Convert matrix to dataframe       
+old_data = pd.DataFrame(smox, columns = col_names )  
+
+
+#Histograms - check skews
+#Duration
+plt.hist(old_data['Duration'])
+plt.xlabel('Duration')
+plt.ylabel('Frequency')
+plt.title('Histogram of Duration in Months after Oversampling')
+plt.show()
+#Credit amount
+plt.hist(old_data['Credit amount'])
+plt.xlabel('Credit amount')
+plt.ylabel('Frequency')
+plt.title('Histogram of Credit Amount after Oversampling')
+plt.show()
+#Installment rate
+plt.hist(old_data['Installment rate'])
+plt.xlabel('Installment rate')
+plt.ylabel('Frequency')
+plt.title('Histogram of Installment Rate in % of Disposable Income after Oversampling')
+plt.show()
+#Years of present residence - fix 
+plt.hist(old_data['Present resident since'])
+plt.xlabel('Present resident since')
+plt.ylabel('Frequency')
+plt.title('Histogram of Present Residence Since after Oversampling')
+plt.show()
+#Age
+plt.hist(old_data['Age'])
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.title('Histogram of Age after Oversampling')
+plt.show()
+#Number of existing credits - fix 
+plt.hist(old_data['Number existing credits'])
+plt.xlabel('Number existing credits')
+plt.ylabel('Frequency')
+plt.title('Histogram Of Number Of Existing Credits At This Bank after Oversampling')
+plt.show()
+#Number of people liable
+plt.hist(old_data['Number of people liable'])
+plt.xlabel('Number of people liable')
+plt.ylabel('Frequency')
+plt.title('Histogram of Number of people being liable to provide maintenance for after Oversampling')
+plt.show()
+
+#Create logistic regression object
+logreg_ov = ln.LogisticRegression()
+#Model building
+#Fit the logistic regression 
+logreg_ov.fit(smox, smoy)
+
+#Model testing
+#Test for accuracy of test set
+score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'accuracy', cv = 10)
+np.mean(score_ov)
+#0.765
+#Test for recall of test set
+recall_score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'recall', cv = 10)
+np.mean(recall_score_ov)
+#0.799
+#Test for precision of test set
+precision_score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'precision', cv = 10)
+np.mean(precision_score_ov)
+#0.751
+#Test for AUC
+auc_score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'roc_auc', cv = 10)
+np.mean(auc_score_ov)
+#0.823 
 
 
 
+#Model building pt. 4
+#Dimensionality reduction using PCA
+from sklearn.decomposition import PCA
+from sklearn import grid_search
+
+#Use gridsearch for number of principal components
+#Choose parameters for PCA
+parameters = [{'n_components': [30, 35, 40, 45, 46, 47, 48, 49, 50, 55, 60], 'whiten': ['True', 'False']}]
+#Create PCA object
+pca = PCA()
+#Gridsearch function for optimal number of principal components
+gr = grid_search.GridSearchCV(pca, parameters)
+#Fit function to data
+gr.fit(smox, smoy)
+#Optimal number of principal components
+gr.best_params_
+#{'n_components': 48, 'whiten': 'True'}
+#Use 48 principal components with normalization
+
+#Create PCA object
+pca1 = PCA(n_components = 48, whiten = True) #Tune PCA
+#Fit
+pca1.fit(smox)
+#Transform data
+smox2 = pca1.transform(smox)
+
+#Classification
+#Create logistic regression object
+logreg_p = ln.LogisticRegression()
+#Model building
+#Fit the logistic regression 
+logreg_p.fit(smox2, smoy)
+
+#Model testing
+#Test for accuracy of test set
+score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'accuracy', cv = 10)
+np.mean(score_p)
+#0.749
+#Test for recall of test set
+recall_score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'recall', cv = 10)
+np.mean(recall_score_p)
+#0.77
+#Test for precision of test set
+precision_score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'precision', cv = 10)
+np.mean(precision_score_p)
+#0.7398
+#Test for AUC
+auc_score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'roc_auc', cv = 10)
+np.mean(auc_score_p)
+#0.822
+
+#Result: slightly reduced results
 
 
 

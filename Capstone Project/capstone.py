@@ -115,7 +115,7 @@ plt.scatter(german_credit['Credit amount'], german_credit['Classification'])
 #german_credit['Classification'] = german_credit['Classification'].astype('category')
 
 #Change classification label - HELP!!!!
-german_credit['Classification'] = german_credit['Classification'].str.replace('1', '0')
+#german_credit['Classification'] = german_credit['Classification'].str.replace('1', '0')
 #ERROR: AttributeError: Can only use .str accessor with string values, which use np.object_ dtype in pandas
 
 german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) #ONE WAY
@@ -159,7 +159,7 @@ X = X.as_matrix()
 Y = Y.as_matrix()
 
 #Fit the logistic regression 
-lo = logreg.fit(X, Y)
+logreg.fit(X, Y)
 
 #Identify size of training data with learning curves - USE POST FROM ULTRAVIOLET ANALYTICS
 #Cross validation is 3 folds
@@ -226,6 +226,7 @@ auc_score = cross_val_score(logreg, X, Y, scoring = 'roc_auc', cv = 10)
 np.mean(auc_score)
 
 
+
 #Model building pt. 2
 #Standardize numeric variables
 #Re-import data and subset numeric variables to standardize in matrix
@@ -234,6 +235,10 @@ german_credit = pd.read_csv('German.csv')
 #Data type changes
 #Change data type of classification
 german_credit['Classification'] = german_credit['Classification'].astype('category')
+#Convert class labels
+german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) #ONE WAY
+
+
 #Convert integer to float
 #Subset numeric data
 num_credit = german_credit[['Duration', 'Credit amount', 
@@ -245,6 +250,14 @@ num_credit_st = num_credit.astype('float')
 stan = StandardScaler().fit(num_credit_st)
 #Transform dataset
 stan_data = stan.transform(num_credit_st)
+#Convert array to  dataframe
+#Get strings of numeric column namecolu_
+col_names = ['Duration', 'Credit amount', 
+                            'Installment rate', 'Present resident since',
+                            'Age', 'Number existing credits', 'Number of people liable']
+new_stan = pd.DataFrame(stan_data, columns = col_names)                            
+
+
 #Subset categorical data
 cat_credit = german_credit[['Status checking', 'Credit history', 'Purpose', 
                               'Savings account/bonds', 'Present employment', 
@@ -254,7 +267,10 @@ cat_credit = german_credit[['Status checking', 'Credit history', 'Purpose',
 #Change categorical variables to dummy
 dummy_var = pd.get_dummies(cat_credit)  
 #Join dataframes together 
-german_new_credit = dummy_var.join(num_credit) 
+#german_new_credit = dummy_var.join(num_credit) 
+
+#New way to join dataframe
+german_new_credit = dummy_var.join(new_stan) #error
 
 #Correlation matrix of standardized numeric variables
 #Subset data
@@ -287,15 +303,29 @@ logreg_st.fit(X_stm, Y_stm)
 #Test for accuracy of test set
 score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'accuracy', cv = 10)
 np.mean(score_st)
-#0.748
+#0.75
 #Test for recall of test set
 recall_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'recall', cv = 10)
 np.mean(recall_score_st)
-#0.869
+#0.467
 #Test for precision of test set
 precision_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'precision', cv = 10)
 np.mean(precision_score_st)
-#0.791
+#0.62
+
+#Print confusion matrix
+#Specificity must of made up for a lower recall rate to get a higher accuracy
+#recall for fraud problem would be good  - objective
+#Decisions around how I build my model
+
+#Unchanged results - identifying coefficients for explanation
+#Coefficients of logistic regression with standardized numeric data
+logreg_st.coef_
+#Coefficients of logistic regreiosn with non-standardized numeric data
+logreg.coef_
+#Result - unchanged coefficients
+
+
 
 
 #Model building pt.3 

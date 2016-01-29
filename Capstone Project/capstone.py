@@ -36,12 +36,6 @@ german_credit.notnull().sum()
 #Data exploration
 #Summary statistics
 german_credit.describe()
-#Scatterplot matrix - what's the right size?
-#Subset data - numeric variables
-#df = dataframe[['Duration', 'Credit amount', 'Installment rate', 'Present resident since',
-#                'Age', 'Number existing credits', 'Number of people liable']]
-#Scatterplot matrix
-#scatter_matrix(df, alpha = 0.3, diagonal = 'dke')
 
 #Standardize  first!!!
 #matrix
@@ -99,28 +93,12 @@ german_credit['Classification'].value_counts()
 #1    700
 #2    300
 
-#Outlier detection - do boxplots
-#Boxplots
-plt.boxplot(german_credit['Credit amount']) 
-
-#Check logistic regression ???
-plt.scatter(german_credit['Credit amount'], german_credit['Classification'])
-
-#Correlation between numeric
-#Anova between categorical and numeric?
-#Chi-squared test between all unordered categorical?
-
 #Data cleaning
 #Change data type of classification
 #german_credit['Classification'] = german_credit['Classification'].astype('category')
 
-#Change classification label - HELP!!!!
-#german_credit['Classification'] = german_credit['Classification'].str.replace('1', '0')
-#ERROR: AttributeError: Can only use .str accessor with string values, which use np.object_ dtype in pandas
-
-german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) #ONE WAY
-
-
+#Change classification label from (1,2) to (0,1)
+german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) 
 
 #Change categorical variables to dummy
 dummy_var = pd.get_dummies(german_credit[['Status checking', 'Credit history', 'Purpose', 
@@ -144,14 +122,12 @@ german_new_credit = dummy_var.join(credit_new)
 german_new_credit.shape        
 #(1000, 62)
                        
-
 #Model building
 #Subset dataframe into indepedent and dependent variables
 X = german_new_credit.drop('Classification', axis = 1)
-Y = german_new_credit['Classification']
+Y = german_credit['Classification']
 
 #Logistic regression 
-#Get c parameter for regularization 
 #Create logistic regression object
 logreg = ln.LogisticRegression()
 #Convert dataframe to matrix 
@@ -162,51 +138,9 @@ Y = Y.as_matrix()
 logreg.fit(X, Y)
 
 #Identify size of training data with learning curves - USE POST FROM ULTRAVIOLET ANALYTICS
-#Cross validation is 3 folds
-
-#Trouble plotting learning curves
-train_sizes, train_scores, valid_scores = learning_curve(
-     lo, X, Y)
-
-def plot_learning_curve(lo, Logit, X, Y, ylim = None, cv = None):
-    plt.figure()
-    plt.title(title)
-    if ylim is not None:
-        plt.ylim(*ylim)
-    plt.xlabel("Training examples")
-    plt.ylabel("Score")
-    train_sizes, train_scores, test_scores = learning_curve(
-        estimator, X, y, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes)
-    train_scores_mean = np.mean(train_scores, axis=1)
-    train_scores_std = np.std(train_scores, axis=1)
-    test_scores_mean = np.mean(test_scores, axis=1)
-    test_scores_std = np.std(test_scores, axis=1)
-    plt.grid()
-
-    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
-                     train_scores_mean + train_scores_std, alpha=0.1,
-                     color="r")
-    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
-                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
-    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
-             label="Training score")
-    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
-             label="Cross-validation score")
-
-    plt.legend(loc="best")
-    return plt
-      
-plt.show()    
 
 
-
-
-
-
-
-
-
-
+#Got different accuracy, precision, recall score with class labeled as (1,2) compared to (0,1)
 
 #Model testing
 #Test for accuracy of test set
@@ -216,14 +150,15 @@ np.mean(score)
 #Test for recall of test set
 recall_score = cross_val_score(logreg, X, Y, scoring = 'recall', cv = 10)
 np.mean(recall_score)
-#0.869
+#0.463 #new score
 #Test for precision of test set
 precision_score = cross_val_score(logreg, X, Y, scoring = 'precision', cv = 10)
 np.mean(precision_score)
-#0.791
+#0.617 #new score
 #Test for AUC
 auc_score = cross_val_score(logreg, X, Y, scoring = 'roc_auc', cv = 10)
 np.mean(auc_score)
+#0.791
 
 
 
@@ -234,10 +169,9 @@ np.mean(auc_score)
 german_credit = pd.read_csv('German.csv')
 #Data type changes
 #Change data type of classification
-german_credit['Classification'] = german_credit['Classification'].astype('category')
+#german_credit['Classification'] = german_credit['Classification'].astype('category')
 #Convert class labels
-german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) #ONE WAY
-
+german_credit['Classification'] = german_credit['Classification'].map(lambda x: x-1) 
 
 #Convert integer to float
 #Subset numeric data
@@ -251,10 +185,9 @@ stan = StandardScaler().fit(num_credit_st)
 #Transform dataset
 stan_data = stan.transform(num_credit_st)
 #Convert array to  dataframe
-#Get strings of numeric column namecolu_
-col_names = ['Duration', 'Credit amount', 
-                            'Installment rate', 'Present resident since',
-                            'Age', 'Number existing credits', 'Number of people liable']
+#Get strings of numeric column name_
+col_names = ['Duration', 'Credit amount', 'Installment rate', 'Present resident since',
+             'Age', 'Number existing credits', 'Number of people liable']
 new_stan = pd.DataFrame(stan_data, columns = col_names)                            
 
 
@@ -277,16 +210,12 @@ german_new_credit = dummy_var.join(new_stan) #error
 num_st = german_new_credit[['Duration', 'Credit amount', 
                             'Installment rate', 'Present resident since',
                             'Age', 'Number existing credits', 'Number of people liable']]
+#Check correlation
 num_st.corr()
-
-                            
+                      
 #Subset dataframe into indepedent and dependent variables
 X_st = german_new_credit
 Y_st = german_credit['Classification'] 
-
-#Logistic regression 
-#Get c parameter for regularization 
-#parameters = {'C': [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 1]}
 
 #Create logistic regression object
 logreg_st = ln.LogisticRegression()
@@ -296,9 +225,6 @@ Y_stm = Y_st.as_matrix()
 
 #Fit the logistic regression 
 logreg_st.fit(X_stm, Y_stm)
-
-#Model testing pt. 2 - no changes b/c need a different value for regularization!!!!!!!!!
-#Get AUC score
 
 #Test for accuracy of test set
 score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'accuracy', cv = 10)
@@ -312,18 +238,17 @@ np.mean(recall_score_st)
 precision_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'precision', cv = 10)
 np.mean(precision_score_st)
 #0.62
+#Test for AUC
+auc_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'roc_auc', cv = 10)
+np.mean(auc_score_st)
+#0.79
 
 #Print confusion matrix
 #Specificity must of made up for a lower recall rate to get a higher accuracy
 #recall for fraud problem would be good  - objective
 #Decisions around how I build my model
 
-#Unchanged results - identifying coefficients for explanation
-#Coefficients of logistic regression with standardized numeric data
-logreg_st.coef_
-#Coefficients of logistic regreiosn with non-standardized numeric data
-logreg.coef_
-#Result - unchanged coefficients
+
 
 
 

@@ -76,17 +76,42 @@ plt.show()
 plt.hist(german_credit['Number existing credits'])
 plt.xlabel('Number existing credits')
 plt.ylabel('Frequency')
-plt.title('Histogram Of Number Of Existing Credits At This Bank ')
+plt.title('Histogram Of Number Of Existing Credits At This Bank')
 plt.show()
 #Number of people liable
 plt.hist(german_credit['Number of people liable'])
 plt.xlabel('Number of people liable')
 plt.ylabel('Frequency')
-plt.title('Histogram of Number of people being liable to provide maintenance for ')
+plt.title('Histogram of Number of people being liable to provide maintenance for')
 plt.show()
 
 #Counting factors in categorical variables 
+#Status checking
 german_credit['Status checking'].value_counts()
+#Credit history
+german_credit['Credit history'].value_counts()
+#Purpose
+german_credit['Purpose'].value_counts()
+#Savings account/bonds
+german_credit['Savings account/bonds'].value_counts()
+#Present employment
+german_credit['Present employment'].value_counts()
+#Personal status/sex
+german_credit['Personal status/sex'].value_counts()
+#Debtors/guarantors
+german_credit['Debtors/guarantors'].value_counts()
+#Property
+german_credit['Property'].value_counts()
+#Other installment plans
+german_credit['Other installment plans'].value_counts()
+#Housing
+german_credit['Housing'].value_counts()
+#Job
+german_credit['Job'].value_counts()
+#Telephone
+german_credit['Telephone'].value_counts()
+#Foreign worker
+german_credit['Foreign worker'].value_counts()
 
 #Checking balance of dependent variable
 german_credit['Classification'].value_counts()
@@ -138,9 +163,6 @@ Y = Y.as_matrix()
 logreg.fit(X, Y)
 
 #Identify size of training data with learning curves - USE POST FROM ULTRAVIOLET ANALYTICS
-
-
-#Got different accuracy, precision, recall score with class labeled as (1,2) compared to (0,1)
 
 #Model testing
 #Test for accuracy of test set
@@ -199,11 +221,8 @@ cat_credit = german_credit[['Status checking', 'Credit history', 'Purpose',
                               'Job', 'Telephone', 'Foreign worker']]
 #Change categorical variables to dummy
 dummy_var = pd.get_dummies(cat_credit)  
-#Join dataframes together 
-#german_new_credit = dummy_var.join(num_credit) 
-
-#New way to join dataframe
-german_new_credit = dummy_var.join(new_stan) #error
+#Join dataframes together
+german_new_credit = dummy_var.join(new_stan) 
 
 #Correlation matrix of standardized numeric variables
 #Subset data
@@ -243,7 +262,6 @@ auc_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'roc_auc', cv 
 np.mean(auc_score_st)
 #0.79
 
-#Print confusion matrix
 #Specificity must of made up for a lower recall rate to get a higher accuracy
 #recall for fraud problem would be good  - objective
 #Decisions around how I build my model
@@ -470,32 +488,4 @@ np.mean(auc_score_p)
 
 
 
-
-
-#Remove outliers by variable transformation or deleting observations
-    #Do scatterplots and boxplots
-    #See if standardizing did anything - only report the ones that made a difference
-#Feature engineering
-    #Remove skewness of variables
-    #Create new features
-
-#Scatterplots
-
-
-
-#To do later
-#More complex models 
-#Things to vary:
-    #Training set size
-        #Compare different classification methods with learning curves
-    #Parameter values
-        #Grid search
-
-#Grid search for multiple parameters for several classifiers
-parameters = [
-    {'weights': ['uniform', 'distance'], 'n_neighbors': [5, 10, 15, 20, 25, 30, 35]}, ###KNN
-    {'kernel': ('linear', 'rbf'), 'C':[1, 10]}, ###SVM
-    {'n_estimators': [100, 200, 250, 300, 350, 400, 450, 500, 550]}, ###random forest?? idk if will work
-    #Logistic regression
-    
-    
+  

@@ -442,7 +442,7 @@ parameters = [{'n_components': [30, 35, 40, 45, 46, 47, 48, 49, 50, 55, 60], 'wh
 #Create PCA object
 pca = PCA()
 #Gridsearch function for optimal number of principal components
-gr = grid_search.GridSearchCV(pca, parameters)
+gr = grid_search.GridSearchCV(pca, parameters, scoring = 'explained_variance_score')
 #Fit function to data
 gr.fit(smox, smoy)
 #Optimal number of principal components
@@ -450,7 +450,7 @@ gr.best_params_
 #{'n_components': 48, 'whiten': 'True'}
 #Use 48 principal components with normalization
 
-#Create PCA object
+#Create PCA object  - 49
 pca1 = PCA(n_components = 48, whiten = True) #Tune PCA
 #Fit
 pca1.fit(smox)
@@ -485,7 +485,26 @@ np.mean(auc_score_p)
 #Result: slightly reduced results
 
 
+#MISTAKE - GRIDSEARCH ONLY APPLIES TO ACCURACY W/ CLASSIFICATION
+#AND R2 W/ REGRESSION 
 
 
+#pipeline example
+from sklearn.pipeline import Pipeline
 
-  
+#Algorithm objects
+pca = PCA()
+logreg_p = ln.LogisticRegression()
+pipe = Pipeline(steps=[('pca', pca), ('logreg_p', logreg_p)])
+
+#Fit models
+pca.fit(smox)
+
+#Predict
+#Set components for PCA
+n_components = [30, 35, 40, 45, 50, 55]
+Cs = np.logspace(-4, 4, 3)
+
+#Create pipeline
+estimator = GridSearchCV(pipe, dict(pca__n_components = n_components, logreg_p__C = Cs))
+estimator.fit(smox, smoy)

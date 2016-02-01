@@ -165,19 +165,19 @@ logreg.fit(X, Y)
 #Identify size of training data with learning curves - USE POST FROM ULTRAVIOLET ANALYTICS
 
 #Model testing
-#Test for accuracy of test set
+#Accuracy of test set
 score = cross_val_score(logreg, X, Y, scoring = 'accuracy', cv = 10)
 np.mean(score)
 #0.748
-#Test for recall of test set
+#Recall of test set
 recall_score = cross_val_score(logreg, X, Y, scoring = 'recall', cv = 10)
 np.mean(recall_score)
-#0.463 #new score
-#Test for precision of test set
+#0.463 
+#Precision of test set
 precision_score = cross_val_score(logreg, X, Y, scoring = 'precision', cv = 10)
 np.mean(precision_score)
-#0.617 #new score
-#Test for AUC
+#0.617 
+#AUC
 auc_score = cross_val_score(logreg, X, Y, scoring = 'roc_auc', cv = 10)
 np.mean(auc_score)
 #0.791

@@ -8,16 +8,11 @@ Created on Mon Jan  4 10:06:04 2016
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from pandas.tools.plotting import scatter_matrix
 from sklearn.cross_validation import cross_val_score
 from sklearn.preprocessing import StandardScaler
 import sklearn.linear_model as ln
-from sklearn.metrics import roc_auc_score
-from unbalanced_dataset import UnderSampler, NearMiss, CondensedNearestNeighbour, OneSidedSelection,\
-NeighbourhoodCleaningRule, TomekLinks, ClusterCentroids, OverSampler, SMOTE,\
-SMOTETomek, SMOTEENN, EasyEnsemble, BalanceCascade
+from unbalanced_dataset import SMOTE
 
-from sklearn.learning_curve import learning_curve
 
 
 #Import data
@@ -156,29 +151,29 @@ Y = german_credit['Classification']
 #Create logistic regression object
 logreg = ln.LogisticRegression()
 #Convert dataframe to matrix 
-X = X.as_matrix()
-Y = Y.as_matrix()
+X_mat = X.as_matrix()
+Y_mat = Y.as_matrix()
 
 #Fit the logistic regression 
-logreg.fit(X, Y)
+logreg.fit(X_mat, Y_mat)
 
 #Identify size of training data with learning curves - USE POST FROM ULTRAVIOLET ANALYTICS
 
 #Model testing
 #Accuracy of test set
-score = cross_val_score(logreg, X, Y, scoring = 'accuracy', cv = 10)
+score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'accuracy', cv = 10)
 np.mean(score)
 #0.748
 #Recall of test set
-recall_score = cross_val_score(logreg, X, Y, scoring = 'recall', cv = 10)
+recall_score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'recall', cv = 10)
 np.mean(recall_score)
 #0.463 
 #Precision of test set
-precision_score = cross_val_score(logreg, X, Y, scoring = 'precision', cv = 10)
+precision_score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'precision', cv = 10)
 np.mean(precision_score)
 #0.617 
 #AUC
-auc_score = cross_val_score(logreg, X, Y, scoring = 'roc_auc', cv = 10)
+auc_score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'roc_auc', cv = 10)
 np.mean(auc_score)
 #0.791
 

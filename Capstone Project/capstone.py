@@ -7,13 +7,12 @@ Created on Mon Jan  4 10:06:04 2016
 #Import modules
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn
 import numpy as np
 from sklearn.cross_validation import cross_val_score
 from sklearn.preprocessing import StandardScaler
 import sklearn.linear_model as ln
 from unbalanced_dataset import SMOTE
-
-
 
 #Import data
 german_credit = pd.read_csv('German.csv')
@@ -31,10 +30,6 @@ german_credit.notnull().sum()
 #Data exploration
 #Summary statistics
 german_credit.describe()
-
-#Standardize  first!!!
-#matrix
-german_credit.corr()
 
 #Histograms - check skews
 #Duration
@@ -79,6 +74,8 @@ plt.xlabel('Number of people liable')
 plt.ylabel('Frequency')
 plt.title('Histogram of Number of people being liable to provide maintenance for')
 plt.show()
+
+
 
 #Counting factors in categorical variables 
 #Status checking
@@ -162,19 +159,19 @@ logreg.fit(X_mat, Y_mat)
 #Model testing
 #Accuracy of test set
 score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'accuracy', cv = 10)
-np.mean(score)
+sum_score = np.mean(score)
 #0.748
 #Recall of test set
 recall_score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'recall', cv = 10)
-np.mean(recall_score)
+sum_recall_score = np.mean(recall_score)
 #0.463 
 #Precision of test set
 precision_score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'precision', cv = 10)
-np.mean(precision_score)
+sum_precision_score = np.mean(precision_score)
 #0.617 
 #AUC
 auc_score = cross_val_score(logreg, X_mat, Y_mat, scoring = 'roc_auc', cv = 10)
-np.mean(auc_score)
+sum_auc_score = np.mean(auc_score)
 #0.791
 
 
@@ -242,19 +239,19 @@ logreg_st.fit(X_stm, Y_stm)
 
 #Test for accuracy of test set
 score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'accuracy', cv = 10)
-np.mean(score_st)
+sum_score_st = np.mean(score_st)
 #0.75
 #Test for recall of test set
 recall_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'recall', cv = 10)
-np.mean(recall_score_st)
+sum_recall_score_st = np.mean(recall_score_st)
 #0.467
 #Test for precision of test set
 precision_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'precision', cv = 10)
-np.mean(precision_score_st)
+sum_precision_score_st = np.mean(precision_score_st)
 #0.62
 #Test for AUC
 auc_score_st = cross_val_score(logreg_st, X_stm, Y_stm, scoring = 'roc_auc', cv = 10)
-np.mean(auc_score_st)
+sum_auc_score_st = np.mean(auc_score_st)
 #0.79
 
 #Specificity must of made up for a lower recall rate to get a higher accuracy
@@ -409,19 +406,19 @@ logreg_ov.fit(smox, smoy)
 #Model testing
 #Test for accuracy of test set
 score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'accuracy', cv = 10)
-np.mean(score_ov)
+sum_score_ov = np.mean(score_ov)
 #0.765
 #Test for recall of test set
 recall_score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'recall', cv = 10)
-np.mean(recall_score_ov)
+sum_recall_score_ov = np.mean(recall_score_ov)
 #0.799
 #Test for precision of test set
 precision_score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'precision', cv = 10)
-np.mean(precision_score_ov)
+sum_precision_score_ov = np.mean(precision_score_ov)
 #0.751
 #Test for AUC
 auc_score_ov = cross_val_score(logreg_ov, smox, smoy, scoring = 'roc_auc', cv = 10)
-np.mean(auc_score_ov)
+sum_auc_score_ov = np.mean(auc_score_ov)
 #0.823 
 
 
@@ -437,7 +434,7 @@ parameters = [{'n_components': [30, 35, 40, 45, 46, 47, 48, 49, 50, 55, 60], 'wh
 #Create PCA object
 pca = PCA()
 #Gridsearch function for optimal number of principal components
-gr = grid_search.GridSearchCV(pca, parameters, scoring = 'explained_variance_score')
+gr = grid_search.GridSearchCV(pca, parameters)
 #Fit function to data
 gr.fit(smox, smoy)
 #Optimal number of principal components
@@ -462,19 +459,19 @@ logreg_p.fit(smox2, smoy)
 #Model testing
 #Test for accuracy of test set
 score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'accuracy', cv = 10)
-np.mean(score_p)
+sum_score_p = np.mean(score_p)
 #0.749
 #Test for recall of test set
 recall_score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'recall', cv = 10)
-np.mean(recall_score_p)
+sum_recall_score_p = np.mean(recall_score_p)
 #0.77
 #Test for precision of test set
 precision_score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'precision', cv = 10)
-np.mean(precision_score_p)
+sum_precision_score_p = np.mean(precision_score_p)
 #0.7398
 #Test for AUC
 auc_score_p = cross_val_score(logreg_p, smox2, smoy, scoring = 'roc_auc', cv = 10)
-np.mean(auc_score_p)
+sum_auc_score_p = np.mean(auc_score_p)
 #0.822
 
 #Result: slightly reduced results
@@ -484,22 +481,23 @@ np.mean(auc_score_p)
 #AND R2 W/ REGRESSION 
 
 
-#pipeline example
-from sklearn.pipeline import Pipeline
+#Compareing results of four logitistic regression models                          
+                                   
+#Create pandas dataframe from dictionary of objects
+#Create dictionary
+#Accuracy, precision, recall, and AUC for all four models
+Measure = {
+    'Accuracy': [sum_score, sum_score_st, sum_score_ov, sum_score_p],
+    'Precision': [sum_precision_score, sum_precision_score_st, sum_precision_score_ov,
+sum_precision_score_p],
+    'Recall': [sum_recall_score, sum_recall_score_st, sum_recall_score_ov,
+sum_recall_score_p],
+    'AUC': [sum_auc_score, sum_auc_score_st, sum_auc_score_ov, sum_auc_score_p],
+    'Model': ['Standard', 'Standardized', 'SMOTE', 'PCA']
+}                           
+ 
+new = pd.DataFrame(dict)  
 
-#Algorithm objects
-pca = PCA()
-logreg_p = ln.LogisticRegression()
-pipe = Pipeline(steps=[('pca', pca), ('logreg_p', logreg_p)])
-
-#Fit models
-pca.fit(smox)
-
-#Predict
-#Set components for PCA
-n_components = [30, 35, 40, 45, 50, 55]
-Cs = np.logspace(-4, 4, 3)
-
-#Create pipeline
-estimator = GridSearchCV(pipe, dict(pca__n_components = n_components, logreg_p__C = Cs))
-estimator.fit(smox, smoy)
+new=pd.DataFrame(Measure)     
+#Plot multiple barplots
+new.plot(kind = 'bar', x = 'Model', figsize = (9, 11))
